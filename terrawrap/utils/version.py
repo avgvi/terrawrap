@@ -7,11 +7,17 @@ from time import sleep
 from typing import Optional, Tuple
 
 import requests
-from diskcache import Cache
+from diskcache_community import Cache, SafeDisk
 from packaging import version
 
 ONE_DAY_IN_SECONDS = 60 * 60 * 24
-cache = Cache(os.path.join(tempfile.gettempdir(), "terrawrap_version_cache"))
+# The cache lives in the shared temp directory, so read it through SafeDisk:
+# an entry that holds anything other than plain data is treated as a miss
+# instead of being unpickled.
+cache = Cache(
+    os.path.join(tempfile.gettempdir(), "terrawrap_version_cache"),
+    disk=SafeDisk.with_options(on_error="miss"),
+)
 
 
 def version_check(current_version: str) -> bool:
